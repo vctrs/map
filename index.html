@@ -1,0 +1,351 @@
+<html>
+  <head>
+    <title>Using a Map Id</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+
+    <script>
+
+        alert("Calm down");
+
+        var lastClickedFeatureIds = [];
+        let lastInteractedFeatureIds = [];
+
+        let featureLayer;
+        let infoWindow;
+        let map;
+        let sheet_url = "https://script.googleusercontent.com/macros/echo?user_content_key=YYXtOZjK_jaiv7aILBZ7Bm5v6U1WvRj944ucH1oWRbLmJGebwqGcB9kvKq-jCsvQ3_Yv69aJHhN-l0pvV9H17cyyyMXjaOTJm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnAH3LdWtC8sLCXaJzMRQlQ7cZwr3yA6OlgDZ-j4ZphpEfJ7jHbVSNhdrLdJ6pADs8dAQBqLzoQ5-2UH0FbIn1fP_Y3-Gr5LzRw&lib=M3DoDAdkjo2T6YoFjSzlvCwoUxcDVH0Jx"
+
+        const mainColor = "#00DC5A"
+        const follow_color = "#000000"
+        const remove_color = "#DB4437"
+
+        var bucket = [];
+
+        const request = new XMLHttpRequest();
+        request.open("GET", sheet_url, false); // `false` makes the request synchronous
+        request.send(null);
+
+        if (request.status === 200) {
+            data = JSON.parse(request.responseText);
+        }
+        else{data = null}
+
+
+        const styleDefault = {
+        strokeColor: mainColor,
+        strokeOpacity: 0.0,
+        strokeWeight: 0.0,
+        fillColor: "white",
+        fillOpacity: 0.0, // Polygons must be visible to receive events.
+        };
+
+
+
+
+        /*async*/ function createInfoWindow(event) {
+        let feature = event.features[0];
+
+        if (!feature.placeId) return;
+
+        // Update the infowindow.
+        //const place = await feature.fetchPlace();
+        /*
+        let content =
+            '<span style="font-size:small">Reuse potential: ' +
+            data[feature.placeId].toPrecision(2) 
+            "</span>";
+        */
+        if  (!bucket.includes(feature.placeId)){
+
+            var button_text = "Follow"
+            var color = follow_color
+            var onclick_callback = "bucketAdd(this);"
+
+        }
+
+        else {
+
+            var button_text = "Remove"
+            var color = remove_color
+            var onclick_callback = "bucketRemove(this);"
+
+        }
+        console.log(data[feature.placeId], feature.placeId)
+        if (Number(data[feature.placeId]) == 0 || data[feature.placeId] == undefined){
+            reuse_text = 'Reuse potential coming soon.'
+        }
+        else {
+            reuse_text = 'Reuse potential: '+Number(data[feature.placeId]).toLocaleString(undefined,{style: 'percent', minimumFractionDigits:0})
+
+        }
+        let content =
+            '<div id="info_container">'+
+                '<span id="info_span" >'+ reuse_text+
+                '</span><br>' +   
+                '<button id="follow_button" ' + ' style = "background-color:'+color+';" value="'+feature.placeId +'" onclick='+onclick_callback+'>'+button_text+'</button>'+
+            '</div>'
+
+
+
+
+        updateInfoWindow(feature.placeId, content, event.latLng);
+        };
+
+        function bucketAdd(element){
+        console.log(element.outerHTML )
+
+        bucket.push(element.value)
+
+
+        element.outerHTML = '<button id="follow_button" ' + ' style = "background-color:'+remove_color+';" value="' + element.value +'" onclick="bucketRemove(this);">Remove</button>'
+        
+        featureLayer.style = applyStyle;
+
+        };
+
+        function bucketRemove(element){
+        const index = bucket.indexOf(element.value);
+        bucket.splice(index, 1);
+
+        element.textContent = "Follow"
+        element.outerHTML = '<button id="follow_button" ' + ' style = "background-color:'+follow_color+';" value="' + element.value +'" onclick="bucketAdd(this);">Follow</button>'
+        featureLayer.style = applyStyle;
+        };
+
+        // Helper function to create an info window.
+        function updateInfoWindow(id, content, center) {
+        infoWindow.setContent(content);
+        infoWindow.setPosition(center);
+        infoWindow.id = id
+        infoWindow.open({
+            map,
+            shouldFocus: false,
+        });
+        };
+
+        function handleCloseClick(){
+        lastClickedFeatureIds = []
+        featureLayer.style = applyStyle;
+        console.log(this)
+
+        };
+
+
+
+        // Apply styles using a feature style function.
+        function applyStyle(/* FeatureStyleFunctionOptions */ params) {
+        const placeId = params.feature.placeId;
+
+        
+        if (data[placeId]!=undefined) {
+
+            if (data[placeId] == 0) { 
+            var fill_opacity = 0.1
+        
+            var fill_color = "white"
+            
+            }
+            else {
+            fill_opacity = data[placeId]
+            
+            var fill_color = mainColor
+            }
+        // console.log('found ' + placeId +' fill opacity '+ data[placeId])
+
+            if (lastClickedFeatureIds.includes(placeId) ||  lastInteractedFeatureIds.includes(placeId)  ) {
+            // console.log('found clicked' + placeId)
+            var retStyle = {
+
+                ...styleDefault,
+                strokeOpacity: 1,
+                strokeWeight: 3.0,
+                fillColor: fill_color,
+                fillOpacity: fill_opacity,
+            }
+            }
+            else {
+            // console.log('found not clicked' + placeId)
+            var retStyle = {
+
+                ...styleDefault,
+                strokeOpacity: 1,
+                strokeWeight: 1.0,
+                fillColor: fill_color,
+                fillOpacity: fill_opacity,
+
+            }
+
+            
+            }
+
+            if (bucket.includes(placeId)){
+
+            var retStyle = {
+
+                ...styleDefault,
+
+                fillColor: follow_color,
+                fillOpacity: 1,
+            }
+
+            }
+            
+            return retStyle;
+        }
+        else{ 
+
+            return styleDefault; }
+        };
+
+
+
+        function handleClick(/* MouseEvent */ e) {
+        curClickedFeatureId = e.features.map((f) => f.placeId);
+        //console.log('start last '+lastClickedFeatureIds+' cur '+curClickedFeatureId)
+
+        //const inclustionTest = (element) => String(element)  === String(curClickedFeatureId);
+
+        //console.log(lastClickedFeatureIds.some(inclustionTest));
+
+        if (lastClickedFeatureIds.includes(String(curClickedFeatureId)) ) {
+        // console.log('here last '+lastClickedFeatureIds+' cur '+curClickedFeatureId)
+            infoWindow.close();
+            lastClickedFeatureIds = []
+        }
+        else {
+            //console.log('here2 last '+ lastClickedFeatureIds+' cur '+curClickedFeatureId)
+
+            lastClickedFeatureIds = [String(curClickedFeatureId)];
+            createInfoWindow(e);
+        }
+        featureLayer.style = applyStyle;
+        
+        
+        };
+
+
+        function handleMouseMove(/* MouseEvent */ e) {
+        lastInteractedFeatureIds = e.features.map(f => f.placeId);
+        featureLayer.style = applyStyle;
+        }
+
+        function initMap() {
+
+
+
+        
+        
+
+        var myLatlng = new google.maps.LatLng(47.372802, 8.542280);
+
+        map = new google.maps.Map(document.getElementById("map"), {
+            mapId: "5a5ebdd1c5930f12",
+            center: myLatlng,   
+            zoom: 12,
+        });
+
+        featureLayer = map.getFeatureLayer(
+            google.maps.FeatureType.POSTAL_CODE,
+        );
+
+
+        
+        featureLayer.addListener("click", handleClick);
+        featureLayer.addListener('mousemove', handleMouseMove);
+        map.addListener('mousemove', () => {
+            // If the map gets a mousemove, that means there are no feature layers
+            // with listeners registered under the mouse, so we clear the last
+            // interacted feature ids.
+            if (lastInteractedFeatureIds?.length) {
+            lastInteractedFeatureIds = [];
+            featureLayer.style = applyStyle;
+            }
+        });
+
+
+        // featureLayer.forEach(function(f){console.log(1)})
+
+            // Create the infowindow.
+        infoWindow = new google.maps.InfoWindow({});
+
+        infoWindow.addListener("closeclick", handleCloseClick)
+
+
+        // Apply style on load, to enable clicking.
+        featureLayer.style = applyStyle;
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+        window.initMap = initMap;
+
+
+
+
+    </script>
+
+    <style>
+        #map {
+            height: 100%;
+        }
+        
+        /* 
+        * Optional: Makes the sample page fill the window. 
+        */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #info_span {
+        
+            font-size:small;
+
+        }
+
+        
+        #follow_button {
+            /* background-color: #1877f2 ;*/
+            border: none;
+            color: white;
+            padding: 5px;
+            margin-top: 5px;
+            text-align: center;
+            font-size: small;
+            border-radius: 8px;
+
+        }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <!-- 
+      The `defer` attribute causes the callback to execute after the full HTML
+      document has been parsed. For non-blocking uses, avoiding race conditions,
+      and consistent behavior across browsers, consider loading using Promises.
+      See https://developers.google.com/maps/documentation/javascript/load-maps-js-api
+      for more information.
+      -->
+    <script async defer
+      
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly"
+    
+    ></script>
+  </body>
+</html>
