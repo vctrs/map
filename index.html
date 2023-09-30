@@ -5,7 +5,58 @@
 
     
 
-    <script>
+   
+    <style>
+        #map {
+            height: 100%;
+        }
+        
+        /* 
+        * Optional: Makes the sample page fill the window. 
+        */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #info_span {
+        
+            font-size:small;
+
+        }
+
+        
+        #follow_button {
+            /* background-color: #1877f2 ;*/
+            border: none;
+            color: white;
+            padding: 5px;
+            margin-top: 5px;
+            text-align: center;
+            font-size: small;
+            border-radius: 8px;
+
+        }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <!-- 
+      The `defer` attribute causes the callback to execute after the full HTML
+      document has been parsed. For non-blocking uses, avoiding race conditions,
+      and consistent behavior across browsers, consider loading using Promises.
+      See https://developers.google.com/maps/documentation/javascript/load-maps-js-api
+      for more information.
+      -->
+    <script async defer
+      
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly"
+    
+    ></script>
+ <script>
 
        
         var lastClickedFeatureIds = [];
@@ -296,55 +347,5 @@
 
     </script>
 
-    <style>
-        #map {
-            height: 100%;
-        }
-        
-        /* 
-        * Optional: Makes the sample page fill the window. 
-        */
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        #info_span {
-        
-            font-size:small;
-
-        }
-
-        
-        #follow_button {
-            /* background-color: #1877f2 ;*/
-            border: none;
-            color: white;
-            padding: 5px;
-            margin-top: 5px;
-            text-align: center;
-            font-size: small;
-            border-radius: 8px;
-
-        }
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
-
-    <!-- 
-      The `defer` attribute causes the callback to execute after the full HTML
-      document has been parsed. For non-blocking uses, avoiding race conditions,
-      and consistent behavior across browsers, consider loading using Promises.
-      See https://developers.google.com/maps/documentation/javascript/load-maps-js-api
-      for more information.
-      -->
-    <script async defer
-      
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly"
-    
-    ></script>
   </body>
 </html>
